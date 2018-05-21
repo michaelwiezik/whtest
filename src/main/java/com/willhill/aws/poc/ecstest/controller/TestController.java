@@ -12,7 +12,7 @@ public class TestController {
 
     @RequestMapping(value = "/version", method = GET)
     public String getVersion() {
-        return "1.0.1";
+        return "1.0.2";
     }
 
 }
