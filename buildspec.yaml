@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - export imageTag=1.0.1
+      - export version=1.0.1
+      - export imageName=wiliamhilltest
+      - export region=eu-west-1
+      - export repoUrl=507965976448.dkr.ecr.eu-west-1.amazonaws.com
+      - export fullUrl=$repoUrl/$imageName:$imageTag
+      - echo Logging in to Amazon ECR...
+      - `aws ecr get-login --no-include-email --region $region`
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $imageName:$imageTag .
+      - docker tag $imageName:$imageTag $fullUrl
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $fullUrl
