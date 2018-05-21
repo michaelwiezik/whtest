@@ -20,8 +20,11 @@ phases:
       - docker build -t $imageName:$imageTag .
       - echo "running docker tag $imageName:$imageTag $fullUrl"
       - docker tag $imageName:$imageTag $fullUrl
+      - printf '[{"name":"williamhilltest","imageUri":"%s"}]' $fullUrl > imagedefinitions.json
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $fullUrl
+artifacts:
+    files: imagedefinitions.json
