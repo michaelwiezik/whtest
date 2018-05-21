@@ -10,6 +10,7 @@ phases:
       - export repoUrl=507965976448.dkr.ecr.eu-west-1.amazonaws.com
       - export fullUrl=$repoUrl/$imageName:$imageTag
       - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region $region)
   build:
     commands:
       - echo Build started on `date`
