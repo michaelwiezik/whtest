@@ -15,7 +15,6 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - mvn clean install
       - echo "running docker build -t $imageName:$imageTag ."
       - docker build -t $imageName:$imageTag .
       - echo "running docker tag $imageName:$imageTag $fullUrl"
