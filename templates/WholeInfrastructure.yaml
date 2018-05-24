@@ -1,0 +1,473 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  vpc29fa904f:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      InstanceTenancy: default
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+      - Key: Name
+        Value: ECS whtestcluster - VPC
+  vpc95573ff3:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      InstanceTenancy: default
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+  subnetad66d3cb:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: eu-west-1b
+      VpcId:
+        Ref: vpc29fa904f
+      Tags:
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+      - Key: Name
+        Value: ECS whtestcluster - Public Subnet 2
+  subnetb55fb5ef:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.32.0/20
+      AvailabilityZone: eu-west-1a
+      VpcId:
+        Ref: vpc95573ff3
+  subnetb455effc:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: eu-west-1c
+      VpcId:
+        Ref: vpc29fa904f
+      Tags:
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+      - Key: Name
+        Value: ECS whtestcluster - Public Subnet 1
+  subnet2e0aa148:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.0.0/20
+      AvailabilityZone: eu-west-1b
+      VpcId:
+        Ref: vpc95573ff3
+  subnet3608b07e:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.16.0/20
+      AvailabilityZone: eu-west-1c
+      VpcId:
+        Ref: vpc95573ff3
+  igw3cb9c75b:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+      - Key: Name
+        Value: ECS whtestcluster - InternetGateway
+  igwf95b249e:
+    Type: AWS::EC2::InternetGateway
+    Properties: {}
+  doptb571aed3:
+    Type: AWS::EC2::DHCPOptions
+    Properties:
+      DomainName: eu-west-1.compute.internal
+      DomainNameServers:
+      - AmazonProvidedDNS
+  acl68fe1e11:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId:
+        Ref: vpc29fa904f
+  acl0375927a:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId:
+        Ref: vpc95573ff3
+  rtbebc54e92:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: vpc29fa904f
+  rtbcfeb65b6:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: vpc95573ff3
+  rtb8fcf44f6:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: vpc29fa904f
+      Tags:
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+      - Key: Name
+        Value: ECS whtestcluster - RouteTable
+  instancei06faf696db950161b:
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: 'false'
+      InstanceInitiatedShutdownBehavior: stop
+      ImageId: ami-ca0135b3
+      InstanceType: t2.micro
+      Monitoring: 'false'
+      NetworkInterfaces:
+      - DeleteOnTermination: 'true'
+        DeviceIndex: 0
+        SubnetId:
+          Ref: subnetb55fb5ef
+        PrivateIpAddresses:
+        - PrivateIpAddress: 172.31.40.16
+          Primary: 'true'
+        GroupSet:
+        - Ref: sglaunchwizard1
+        AssociatePublicIpAddress: 'true'
+  s3codepipelineeuwest1226447496016:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Suspended
+  s3whtestrepo:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Suspended
+  sgEC2ContainerServicewhtestclusterAlbSecurityGroup3BHEM5E72J1E:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ELB Allowed Ports
+      VpcId:
+        Ref: vpc29fa904f
+      Tags:
+      - Key: Name
+        Value: ECS whtestcluster - ALB SecurityGroup
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+  sgdefault:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: default VPC security group
+      VpcId: vpc-942453f2
+  sgWHTestStackWebServerSecurityGroup1WBEZOB4HDLFV:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTPS access via port 443
+      VpcId: vpc-942453f2
+      Tags:
+      - Key: team
+        Value: BusinessWallet
+  sglaunchwizard1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: launch-wizard-1 created 2018-05-18T14:49:01.329+01:00
+      VpcId:
+        Ref: vpc95573ff3
+  sgEC2ContainerServicewhtestclusterEcsSecurityGroupJRLX1MKOFSJL:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Allowed Ports
+      VpcId:
+        Ref: vpc29fa904f
+      Tags:
+      - Key: Name
+        Value: ECS whtestcluster - ECS SecurityGroup
+      - Key: Description
+        Value: Created for ECS cluster whtestcluster
+  dbsgdefault:
+    Type: AWS::RDS::DBSecurityGroup
+    Properties:
+      GroupDescription: default
+  s3policycodepipelineeuwest1226447496016:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: s3codepipelineeuwest1226447496016
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: SSEAndSSLPolicy
+        Statement:
+        - Sid: DenyUnEncryptedObjectUploads
+          Effect: Deny
+          Principal: "*"
+          Action: s3:PutObject
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - codepipeline-eu-west-
+              - 1-226447496016/*
+          Condition:
+            StringNotEquals:
+              s3:x-amz-server-side-encryption: aws:kms
+        - Sid: DenyInsecureConnections
+          Effect: Deny
+          Principal: "*"
+          Action: s3:*
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - codepipeline-eu-west-
+              - 1-226447496016/*
+          Condition:
+            Bool:
+              aws:SecureTransport: 'false'
+  trailcodepipelinesourcetrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      IncludeGlobalServiceEvents: true
+      IsLogging: 'true'
+      S3KeyPrefix: cloud-trail-507965976448-0e342b69-acf6-4f75-a1db-e450dd2aa647
+      S3BucketName: codepipeline-cloudtrail-placeholder-bucket-eu-west-1
+  acl1:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Egress: 'true'
+      Protocol: "-1"
+      RuleAction: allow
+      RuleNumber: '100'
+      NetworkAclId:
+        Ref: acl68fe1e11
+  acl2:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Protocol: "-1"
+      RuleAction: allow
+      RuleNumber: '100'
+      NetworkAclId:
+        Ref: acl68fe1e11
+  acl3:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Egress: 'true'
+      Protocol: "-1"
+      RuleAction: allow
+      RuleNumber: '100'
+      NetworkAclId:
+        Ref: acl0375927a
+  acl4:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Protocol: "-1"
+      RuleAction: allow
+      RuleNumber: '100'
+      NetworkAclId:
+        Ref: acl0375927a
+  subnetacl1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId:
+        Ref: acl68fe1e11
+      SubnetId:
+        Ref: subnetb455effc
+  subnetacl2:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId:
+        Ref: acl68fe1e11
+      SubnetId:
+        Ref: subnetad66d3cb
+  subnetacl3:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId:
+        Ref: acl0375927a
+      SubnetId:
+        Ref: subnetb55fb5ef
+  subnetacl4:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId:
+        Ref: acl0375927a
+      SubnetId:
+        Ref: subnet2e0aa148
+  subnetacl5:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId:
+        Ref: acl0375927a
+      SubnetId:
+        Ref: subnet3608b07e
+  gw1:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: vpc29fa904f
+      InternetGatewayId:
+        Ref: igw3cb9c75b
+  gw2:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: vpc95573ff3
+      InternetGatewayId:
+        Ref: igwf95b249e
+  subnetroute3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: rtb8fcf44f6
+      SubnetId:
+        Ref: subnetb455effc
+  subnetroute4:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: rtb8fcf44f6
+      SubnetId:
+        Ref: subnetad66d3cb
+  route1:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId:
+        Ref: rtbcfeb65b6
+      GatewayId:
+        Ref: igwf95b249e
+    DependsOn: gw2
+  route2:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId:
+        Ref: rtb8fcf44f6
+      GatewayId:
+        Ref: igw3cb9c75b
+    DependsOn: gw1
+  dchpassoc1:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      VpcId:
+        Ref: vpc29fa904f
+      DhcpOptionsId:
+        Ref: doptb571aed3
+  dchpassoc2:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      VpcId:
+        Ref: vpc95573ff3
+      DhcpOptionsId:
+        Ref: doptb571aed3
+  ingress1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sgEC2ContainerServicewhtestclusterAlbSecurityGroup3BHEM5E72J1E
+      IpProtocol: tcp
+      FromPort: '8080'
+      ToPort: '8080'
+      CidrIp: 0.0.0.0/0
+  ingress2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sgdefault
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: sgdefault
+      SourceSecurityGroupOwnerId: '507965976448'
+  ingress3:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sgdefault
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: sgdefault
+      SourceSecurityGroupOwnerId: '507965976448'
+  ingress4:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sgWHTestStackWebServerSecurityGroup1WBEZOB4HDLFV
+      IpProtocol: tcp
+      FromPort: '443'
+      ToPort: '443'
+      CidrIp: 0.0.0.0/0
+  ingress5:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sglaunchwizard1
+      IpProtocol: tcp
+      FromPort: '22'
+      ToPort: '22'
+      CidrIp: 0.0.0.0/0
+  ingress6:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sgEC2ContainerServicewhtestclusterEcsSecurityGroupJRLX1MKOFSJL
+      IpProtocol: tcp
+      FromPort: '8080'
+      ToPort: '8080'
+      CidrIp: 0.0.0.0/0
+  ingress7:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: sgEC2ContainerServicewhtestclusterEcsSecurityGroupJRLX1MKOFSJL
+      IpProtocol: tcp
+      FromPort: '1'
+      ToPort: '65535'
+      SourceSecurityGroupId:
+        Ref: sgEC2ContainerServicewhtestclusterAlbSecurityGroup3BHEM5E72J1E
+      SourceSecurityGroupOwnerId: '507965976448'
+  egress1:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: sgEC2ContainerServicewhtestclusterAlbSecurityGroup3BHEM5E72J1E
+      IpProtocol: "-1"
+      CidrIp: 0.0.0.0/0
+  egress2:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: sgdefault
+      IpProtocol: "-1"
+      CidrIp: 0.0.0.0/0
+  egress3:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: sgdefault
+      IpProtocol: "-1"
+      CidrIp: 0.0.0.0/0
+  egress4:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: sgWHTestStackWebServerSecurityGroup1WBEZOB4HDLFV
+      IpProtocol: "-1"
+      CidrIp: 0.0.0.0/0
+  egress5:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: sglaunchwizard1
+      IpProtocol: "-1"
+      CidrIp: 0.0.0.0/0
+  egress6:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: sgEC2ContainerServicewhtestclusterEcsSecurityGroupJRLX1MKOFSJL
+      IpProtocol: "-1"
+      CidrIp: 0.0.0.0/0
+Description: ''
