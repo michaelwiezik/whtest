@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation template for CodePipeline for a single microservice
+Parameters:
+  ServiceName:
+    Type: String
+    Description: Name of the service to be deployed, used for the pipeline name
+  GitHubUser:
+    Type: String
+    Description: The user used for a github connection
+  GitHubRepository:
+    Type: String
+    Description: The github repository to connect to
+  GitHubBranch:
+    Type: String
+    Description: The Github branch to build
+    Default: master
+  GitHubToken:
+    Type: String
+    Description: The Github Token used to connect to
+Resources:
+  ArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Join ['', [!Ref 'ServiceName', '-pipeline']]
+      ArtifactStore:
+        Location: !Ref 'ArtifactStoreBucket'
+        Type: S3
+      RoleArn: !GetAtt [PipelineRole, Arn]
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: GitHub
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
+              OutputArtifacts:
+                - Name: Source
+              Configuration:
+                Owner: !Ref GitHubUser
+                Repo: !Ref GitHubRepository
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
+        - Name: Build
+          Actions:
+            - Name: CodeBuild
+              InputArtifacts:
+                - Name: Source
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: Built
+              Configuration:
+                ProjectName: !Join ['', [!Ref 'ServiceName', '-codebuild-project']]
+        - Name: DevDeploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Provider: ECS
+                Owner: AWS
+                Version: 1
+              InputArtifacts:
+                - Name: Built
+              Configuration:
+                ClusterName: 'dev-ECSCluster-178ZUKIOTKC4Q'
+                ServiceName: 'whtest'
+                FileName: imagedefinitions.json
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [codepipeline.amazonaws.com]
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CodePipelineAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - 's3:*'
+                - 'iam:PassRole'
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - 'codebuild:StartBuild'
+                - 'codebuild:BatchGetBuilds'
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                - 'ecs:*'
+                Effect: Allow
+                Resource: '*'
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Join ['', [!Ref 'ServiceName', '-codebuild-project']]
+      ServiceRole: !Ref CodeBuildRole
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/java:openjdk-8
+        PrivilegedMode: true
+      Source:
+        Type: CODEPIPELINE
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [codebuild.amazonaws.com]
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CodeBuildAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - 'logs:*'
+                - 'ec2:CreateNetworkInterface'
+                - 'ec2:DescribeNetworkInterfaces'
+                - 'ec2:DeleteNetworkInterface'
+                - 'ec2:DescribeSubnets'
+                - 'ec2:DescribeSecurityGroups'
+                - 'ec2:DescribeDhcpOptions'
+                - 'ec2:DescribeVpcs'
+                - 'ec2:CreateNetworkInterfacePermission'
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - 's3:*'
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                - 'ecr:*'
+                Effect: Allow
+                Resource: '*'
+
+

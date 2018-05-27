@@ -9,10 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 @RestController
-public class TestController {
+public class HeathCheckController {
 
     @Value("${application.version}")
     private String applicationVersion;
+
+    @RequestMapping(value = "/ping", method = GET)
+    public void ping() {
+    }
 
     @RequestMapping(value = "/version", method = GET)
     public String getVersion() {
